@@ -1,12 +1,39 @@
+# ---- Confidential task data (NEVER commit) ----
 company_A/
 company_B/
+company_C/
 ../company_A/
 ../company_B/
+blind/
+blind_data/
+data/
 *.zip
-__pycache__/
-*.pyc
 *.pdf
 output_template.csv
+
+# Every CSV is ignored by default (raw data, labels, taxonomies, blind data) ...
+*.csv
+# ... except the final outputs and the submission folder
 outputs/*
 !outputs/*__A.csv
 !outputs/*__B.csv
+!submission/
+!submission/*.csv
+
+# ---- Python / venv / cache ----
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+.pytest_cache/
+
+# ---- Secrets ----
+.env
+*.key
+secrets.*
+
+# ---- Editor / OS ----
+.vscode/
+.DS_Store
+Thumbs.db
