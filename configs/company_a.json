@@ -1,0 +1,92 @@
+{
+  "company_id": "A",
+  "description": "Mining operations of a chemicals group. Two systems: ERP goods receipts + AP invoice tool.",
+  "reporting_currency": "ZAR",
+  "data_dir": "../company_A",
+  "output_suffix": "A",
+
+  "taxonomy": {
+    "file": "taxonomy_A.csv",
+    "level_columns": ["category_l1", "category_l2", "category_l3"]
+  },
+
+  "labels": {
+    "file": "labels_A.csv",
+    "record_id_col": "record_id",
+    "level_columns": ["category_l1", "category_l2", "category_l3"],
+    "supplier_key_col": "supplier_key",
+    "item_key_col": "item_key"
+  },
+
+  "classifier": {
+    "feature_columns": ["material_type", "spend_type", "site_code", "cost_centre"],
+    "embeddings": "off"
+  },
+
+  "sources": [
+    {
+      "name": "erp",
+      "file": "erp_goods_receipts.csv",
+      "role": "primary",
+      "record_id_prefix": "ERP:",
+      "record_id_col": "line_id",
+      "columns": {
+        "po_number": "po_number",
+        "po_item": "po_item",
+        "date": "posting_date",
+        "supplier_id": "vendor_id",
+        "supplier_name": "supplier_name",
+        "item_code": "material_number",
+        "description": ["material_short_text", "service_short_text"],
+        "quantity": "quantity",
+        "amount": "value_zar",
+        "currency": "document_currency",
+        "material_type": "material_type",
+        "spend_type": "spend_type",
+        "site_code": "site_code",
+        "cost_centre": "cost_centre"
+      },
+      "amount_basis": "net",
+      "amount_currency_is_reporting": true,
+      "date_formats": ["%Y-%m-%d"],
+      "status": null
+    },
+    {
+      "name": "tool",
+      "file": "invoice_tool_export.csv",
+      "role": "secondary",
+      "record_id_prefix": "TOOL:",
+      "record_id_col": "tool_record_id",
+      "columns": {
+        "invoice_number": "invoice_number",
+        "po_number": "po_reference",
+        "date": "invoice_date",
+        "supplier_name": "supplier_name_as_captured",
+        "description": ["line_text"],
+        "quantity": "quantity",
+        "amount": "gross_amount",
+        "currency": "currency",
+        "vat_rate": "vat_rate",
+        "status": "status"
+      },
+      "amount_basis": "gross",
+      "default_vat_rate": 0.15,
+      "date_formats": ["%Y-%m-%d", "%d-%b-%y", "%d/%m/%Y"],
+      "status": {
+        "approved_values": ["approved", "paid"],
+        "cancelled_values": ["cancelled", "canceled"]
+      }
+    }
+  ],
+
+  "matching": {
+    "po_digits_regex": "(\\d{10})",
+    "amount_tolerance_pct": 1.0,
+    "date_window_days": 120
+  },
+
+  "non_procurement": {
+    "gl_description_patterns": [],
+    "text_patterns": []
+  }
+}

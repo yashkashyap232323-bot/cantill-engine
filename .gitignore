@@ -1,0 +1,12 @@
+company_A/
+company_B/
+../company_A/
+../company_B/
+*.zip
+__pycache__/
+*.pyc
+*.pdf
+output_template.csv
+outputs/*
+!outputs/*__A.csv
+!outputs/*__B.csv

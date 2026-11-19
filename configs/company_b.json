@@ -1,0 +1,79 @@
+{
+  "company_id": "B",
+  "description": "Metal packaging manufacturer. One AP invoice-line file from 8 ERPs (JDE and SAP) in 8 regions, 25 currencies. Vendor IDs only, no supplier names.",
+  "reporting_currency": "USD",
+  "data_dir": "../company_B",
+  "output_suffix": "B",
+
+  "taxonomy": {
+    "file": "taxonomy_B.csv",
+    "level_columns": ["category_l1", "category_l2", "category_l3"]
+  },
+
+  "labels": {
+    "file": "seed_labels.csv",
+    "record_id_col": "line_id",
+    "level_columns": ["category_l1", "category_l2", "category_l3"],
+    "include_col": "include",
+    "exclusion_reason_col": "exclusion_reason"
+  },
+
+  "classifier": {
+    "feature_columns": ["account_desc", "account_code", "region", "erp_system"],
+    "embeddings": "off"
+  },
+
+  "fx": {
+    "file": "fx_rates_usd.csv",
+    "currency_col": "currency",
+    "month_col": "month",
+    "units_per_usd_col": "units_per_usd"
+  },
+
+  "sources": [
+    {
+      "name": "invoices",
+      "file": "invoice_lines.csv",
+      "role": "primary",
+      "record_id_prefix": "",
+      "record_id_col": "line_id",
+      "columns": {
+        "invoice_number": "invoice_number",
+        "date": "invoice_date",
+        "posting_date": "posting_date",
+        "paid_date": "paid_date",
+        "supplier_id": "vendor_id",
+        "item_code": "material_number",
+        "description": ["line_description"],
+        "quantity": "quantity",
+        "amount": "line_amount",
+        "currency": "currency",
+        "fx_rate": "currency_rate",
+        "account_code": "gl_account",
+        "account_desc": "gl_account_description",
+        "supplier_type": "supplier_type",
+        "doc_type": "document_type",
+        "po_type": "po_type",
+        "erp_system": "source_system",
+        "region": "region",
+        "cost_centre": "cost_centre",
+        "transport_flag": "transport_flag"
+      },
+      "amount_basis": "net",
+      "amount_currency_is_reporting": false,
+      "date_formats": ["%Y-%m-%d", "%d-%b-%y", "%d/%m/%Y", "%d.%m.%Y"],
+      "status": null
+    }
+  ],
+
+  "matching": {
+    "po_digits_regex": "(\\d{10})",
+    "amount_tolerance_pct": 1.0,
+    "date_window_days": 120
+  },
+
+  "non_procurement": {
+    "gl_description_patterns": [],
+    "text_patterns": []
+  }
+}

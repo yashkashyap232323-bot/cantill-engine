@@ -1,0 +1,15 @@
+{
+  "strong_text_patterns": [
+    "\\binter[- ]?company\\b", "\\bintercompany\\b", "\\bi/c\\b", "\\broyalt(y|ies)\\b", "\\bdividends?\\b",
+    "\\binterest (expense|charges?|payment)\\b", "\\bloan (repayment|interest)\\b", "\\bbank (charges?|fees?)\\b",
+    "\\bpartner billing\\b", "\\bwithholding tax\\b", "\\bincome tax\\b", "\\bpayroll tax\\b"
+  ],
+  "short_text_patterns": [
+    "\\b(vat|gst|hst|pst)\\b", "\\btax(es)?\\b", "\\brevenue\\b", "\\bduty\\b"
+  ],
+  "short_text_max_words": 6,
+  "account_patterns": [
+    "^\\s*ic\\d*\\s*$", "^\\s*i/c\\b", "^\\s*ic\\s+(payable|receivable)", "inter[- ]?company", "\\btax(es)?\\b", "\\broyalt",
+    "\\bdividend", "\\binterest (expense|income)", "\\brevenue\\b", "\\bsales\\b"
+  ]
+}
