@@ -33,7 +33,7 @@ The output file name is YOURNAME__SUFFIX.csv, where the name comes from --name a
 ## Measured results (from actual runs)
 
 Runtime (laptop, Windows, Python 3.14, no GPU, no LLM API calls):
-- Company A (65,549 rows): 97 s end to end.
+- Company A (65,549 rows): 97 s end to end (supervised run); 54 s for the zero-label run.
 - Company B (41,028 rows): 15 s end to end.
 - LLM API cost per 1,000 lines: 0 (no LLM API is used).
 
@@ -43,15 +43,22 @@ Zero-label evaluation, Company B (seed labels hidden from the model, scored agai
 - L3 accuracy: 0.375 by count, 0.490 by spend.
 - Caveat: seed labels are known to be imperfect, so these numbers are measured against noisy references.
 
-Company A: the submitted output was produced in supervised mode (trained on labels_A.csv).
+Zero-label evaluation, Company A (labels hidden from the model, scored against labels_A.csv, included rows only, n = 41,184):
+- L1 accuracy: 0.437 by count, 0.605 by spend.
+- L2 accuracy: 0.200 by count, 0.333 by spend.
+- L3 accuracy: 0.137 by count, 0.239 by spend.
+- supplier_key pairwise precision / recall: 0.729 / 0.968 (some distinct suppliers are over-merged).
+- item_key pairwise precision / recall: 0.810 / 0.549 (item recall is lower because fuzzy item clustering was removed for speed).
+
+The submitted gunnu__A.csv was produced in supervised mode (trained on labels_A.csv).
 A held-out supervised accuracy was NOT measured; no figure is claimed for it.
-Zero-label evaluation on Company A: (fill in from the Atest run).
 
 ## Limits and honest notes
 - Company A duplicate detection removes 23,857 tool records; over-matching is possible and was not tuned further.
-- Item de-duplication is exact-signature based, so item_key recall may be lower than a fuzzy approach.
+- Zero-label accuracy on Company A is weak at the deeper levels (L2 0.200, L3 0.137), so a new company with no labels should be expected to score low at the lower taxonomy levels.
+- Item de-duplication is exact-signature based, so item_key recall is lower than a fuzzy approach would give.
 - Company B exact-duplicate lines are labelled include=1 in the seed labels, so no de-duplication is applied there.
 
 ## AI usage
 An LLM chat assistant and a coding assistant were used to write and review the code.
-The tool itself does not call any LLM API and needs no API key.
+The tool itself does not call any LLM API and needs no API key.s
