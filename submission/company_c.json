@@ -33,6 +33,7 @@
       "columns": {
         "invoice_number": "invoice_number",
         "date": "invoice_date",
+        "supplier_id": "supplier_name",
         "supplier_name": "supplier_name",
         "item_code": "product_service_code",
         "description": ["line_description", "product_service_description", "invoice_description"],
