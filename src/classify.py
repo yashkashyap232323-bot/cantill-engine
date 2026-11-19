@@ -1,6 +1,6 @@
 """classify.py - taxonomy-agnostic classifier.
-Labels hain -> supervised (TF-IDF + supplier + categorical cols -> LinearSVC).
-Labels nahi -> tree-text similarity (TF-IDF + optional embeddings) -> pseudo-labels -> self-train -> item/supplier smoothing."""
+Labels -> supervised (TF-IDF + supplier + categorical cols -> LinearSVC).
+No labels -> tree-text similarity -> pseudo-labels -> self-train -> item/supplier smoothing."""
 import re
 import numpy as np
 import pandas as pd
@@ -42,7 +42,6 @@ def _tax_classes(tax_df, level_cols):
 
 
 def _label_rows(recs, labels, K):
-    """Series (index=recs.index) of label tuples / NaN."""
     empty = pd.Series([np.nan] * len(recs), index=recs.index, dtype=object)
     if labels is None or len(labels) == 0:
         return empty
@@ -132,13 +131,13 @@ def _zero_label(ztext, sup, classes, mode):
     ps = ok & (margin >= np.quantile(margin[ok], 0.5))
     if len(set(top[ps])) < 2:
         return P_sim, empty
-    parts = [_vec(TfidfVectorizer(ngram_range=(1, 2), min_df=2, sublinear_tf=True, max_features=150000), ztext),
-             _vec(TfidfVectorizer(analyzer="char_wb", ngram_range=(2, 5), min_df=3, sublinear_tf=True, max_features=200000), ztext),
+    parts = [_vec(TfidfVectorizer(ngram_range=(1, 2), min_df=2, sublinear_tf=True, max_features=100000), ztext),
+             _vec(TfidfVectorizer(analyzer="char_wb", ngram_range=(3, 4), min_df=3, sublinear_tf=True, max_features=100000), ztext),
              _vec(CountVectorizer(token_pattern=r"\S+", binary=True, lowercase=False), sup)]
     if E is not None:
         parts.append(csr_matrix(E))
     X = hstack(parts).tocsr()
-    svc = LinearSVC(C=0.5).fit(X[ps], top[ps])
+    svc = LinearSVC(C=0.5, tol=1e-3, max_iter=300).fit(X[ps], top[ps])
     return 0.6 * _place(svc, X, L) + 0.4 * P_sim, empty
 
 
@@ -170,19 +169,20 @@ def classify(recs, include_mask, tax_df, level_cols, cfg, labels, sup_key, item_
     cat = _cat_tokens(sub, cat_cols)
     sup = ("sup_" + sk.fillna("").astype(str).str.replace(r"\s+", "_", regex=True)).where(sk.notna(), "")
     inc_pos = include_mask.loc[sub.index].values
-    print(f"[classify] mode={'supervised' if supervised else 'zero-label'} classes={L} rows={inc_pos.sum()} cat_cols={cat_cols}")
+    print(f"[classify] mode={'supervised' if supervised else 'zero-label'} classes={L} rows={inc_pos.sum()} cat_cols={cat_cols}", flush=True)
 
     if supervised:
         tp = np.where(lab_mask.loc[sub.index].values)[0]
         y = np.array([cidx[t] for t in lab_row.loc[sub.index].values[tp]])
-        W = _vec(TfidfVectorizer(ngram_range=(1, 2), min_df=2, sublinear_tf=True, max_features=150000), text)
-        C = _vec(TfidfVectorizer(analyzer="char_wb", ngram_range=(2, 5), min_df=3, sublinear_tf=True, max_features=200000), text)
+        W = _vec(TfidfVectorizer(ngram_range=(1, 2), min_df=2, sublinear_tf=True, max_features=60000), text)
+        C = _vec(TfidfVectorizer(analyzer="char_wb", ngram_range=(3, 4), min_df=5, sublinear_tf=True, max_features=60000), text)
         S = _vec(CountVectorizer(token_pattern=r"\S+", binary=True, lowercase=False), sup)
         Xt = hstack([W, C, S]).tocsr()
         Xc = _vec(CountVectorizer(token_pattern=r"\S+", binary=True, lowercase=False), cat)
         full = hstack([Xt, Xc]).tocsr()
-        tonly = hstack([Xt, csr_matrix(Xc.shape)]).tocsr()   # tool-only rows (no cat cols) ke liye augmentation
-        svc = LinearSVC(C=0.5).fit(vstack([full[tp], tonly[tp]]), np.r_[y, y])
+        tonly = hstack([Xt, csr_matrix(Xc.shape)]).tocsr()
+        m = np.random.RandomState(0).rand(len(tp)) < 0.3
+        svc = LinearSVC(C=0.3, tol=1e-3, max_iter=300).fit(vstack([full[tp], tonly[tp[m]]]), np.r_[y, y[m]])
         P_all = _place(svc, full, L)
         empty = np.zeros(len(sub), dtype=bool)
     else:
@@ -191,7 +191,7 @@ def classify(recs, include_mask, tax_df, level_cols, cfg, labels, sup_key, item_
             extra = extra + " " + sub[c].fillna("").astype(str)
         ztext = _norm(base + " " + extra)
         P_all, empty = _zero_label(ztext, sup, classes, cc.get("embeddings", "auto"))
-        if empty.any() and (~empty).any():          # blank rows -> supplier majority, else global
+        if empty.any() and (~empty).any():
             keys = sk.fillna("").astype(str).values
             dfp = pd.DataFrame(P_all[~empty])
             gm = dfp.groupby(keys[~empty]).mean()
