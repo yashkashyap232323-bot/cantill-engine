@@ -61,4 +61,4 @@ A held-out supervised accuracy was NOT measured; no figure is claimed for it.
 
 ## AI usage
 An LLM chat assistant and a coding assistant were used to write and review the code.
-The tool itself does not call any LLM API and needs no API key.s
+The tool itself does not call any LLM API and needs no API key.
