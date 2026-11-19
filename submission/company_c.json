@@ -1,0 +1,64 @@
+{
+  "company_id": "C",
+  "description": "Oil and gas operator. Invoice lines in USD with supplier names, product/service codes and GL descriptions. No labels.",
+  "reporting_currency": "USD",
+  "data_dir": "../company_C",
+  "output_suffix": "C",
+
+  "taxonomy": {
+    "file": "category_tree_C.csv",
+    "level_columns": ["level_1", "level_2", "level_3", "level_4"]
+  },
+
+  "labels": {
+    "file": "seed_labels.csv",
+    "record_id_col": "line_id",
+    "level_columns": ["level_1", "level_2", "level_3", "level_4"],
+    "include_col": "include",
+    "exclusion_reason_col": "exclusion_reason"
+  },
+
+  "classifier": {
+    "feature_columns": ["account_desc"],
+    "embeddings": "off"
+  },
+
+  "sources": [
+    {
+      "name": "invoices",
+      "file": "invoice_lines.csv",
+      "role": "primary",
+      "record_id_prefix": "",
+      "record_id_col": "line_id",
+      "columns": {
+        "invoice_number": "invoice_number",
+        "date": "invoice_date",
+        "supplier_name": "supplier_name",
+        "item_code": "product_service_code",
+        "description": ["line_description", "product_service_description", "invoice_description"],
+        "quantity": "quantity",
+        "amount": "line_amount_usd",
+        "account_desc": "gl_account_description",
+        "status": "status"
+      },
+      "amount_basis": "net",
+      "amount_currency_is_reporting": true,
+      "date_formats": ["%m/%d/%Y"],
+      "status": {
+        "approved_values": ["approved"],
+        "cancelled_values": ["cancelled", "canceled"]
+      }
+    }
+  ],
+
+  "matching": {
+    "po_digits_regex": "(\\d{10})",
+    "amount_tolerance_pct": 1.0,
+    "date_window_days": 120
+  },
+
+  "non_procurement": {
+    "gl_description_patterns": [],
+    "text_patterns": []
+  }
+}
